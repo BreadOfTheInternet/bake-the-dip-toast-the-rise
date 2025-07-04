@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bake the Dip, Toast the Rise</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>🍞 Bake the Dip, Toast the Rise</h1>
+    <p id="description">
+      Stake $BOWWW. Earn rewards when price moves—up or down.
+    </p>
+
+    <button id="connect-btn">Connect Wallet</button>
+    <p id="wallet-status">Not connected</p>
+
+    <hr>
+
+    <div id="stake-section" class="hidden">
+      <h2>Stake $BOWWW</h2>
+      <label>Amount of BOWWW to Stake</label>
+      <input type="number" id="stake-amount" placeholder="Amount" />
+      
+      <label>Duration (in minutes, min 1 - max 4320)</label>
+      <input type="number" id="stake-duration" placeholder="Duration" />
+
+      <button id="stake-btn">Stake</button>
+    </div>
+
+    <hr>
+
+    <div id="active-stake-section" class="hidden">
+      <h2>Active Stake</h2>
+      <p id="active-details">No active stake.</p>
+      <button id="withdraw-btn" disabled>Withdraw</button>
+    </div>
+
+    <hr>
+
+    <div id="rewards-summary">
+      <h2>Rewards Summary</h2>
+      <p id="dip-reward">Dip Rewards Claimed: 0 / 35,000 BOWWW</p>
+      <p id="rise-reward">Rise Rewards Claimed: 0 / 15,000 BOWWW</p>
+    </div>
+
+    <hr>
+
+    <div id="global-pool">
+      <h2>Global Reward Pool Remaining</h2>
+      <p id="pool-balance">Loading...</p>
+    </div>
+
+    <p id="status-message" class="status"></p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
