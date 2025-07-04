@@ -121,7 +121,13 @@
   <footer>
     <h3>Links & Info</h3>
     <p>
-      <strong>Bowww Token contract:</strong>
+      <strong>Staking Contract:</strong>
+      <a href="https://polygonscan.com/address/0x3e77f8Ef29fd4943D2fddf543EaBB5773F7112bB" target="_blank">
+        0x3e77f8Ef29fd4943D2fddf543EaBB5773F7112bB
+      </a>
+    </p>
+    <p>
+      <strong>Bowww Token:</strong>
       <a href="https://polygonscan.com/address/0x284414b6777872E6DD8982394Fed1779dc87a3Cf" target="_blank">
         0x284414b6777872E6DD8982394Fed1779dc87a3Cf
       </a>
@@ -134,8 +140,8 @@
     </p>
     <p>
       <strong>Chart:</strong>
-      <a href="https://www.geckoterminal.com/polygon_pos/pools/0x9a6c7e4364d94fd37ba6e1e6cebd044e8750a627?utm_source=coingecko&utm_medium=referral&utm_campaign=searchresults" target="_blank">
-        View on GeckoTerminal
+      <a href="https://www.geckoterminal.com/polygon_pos/pools/0x9a6c7e4364d94fd37ba6e1e6cebd044e8750a627" target="_blank">
+        GeckoTerminal
       </a>
     </p>
     <p>
@@ -158,100 +164,7 @@
     </p>
   </footer>
 
-  <script>
-    let provider;
-    let signer;
-    let contract;
-
-    const CONTRACT_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
-    const CONTRACT_ABI = [/* YOUR_ABI_HERE */];
-
-    document.getElementById('connect-btn').addEventListener('click', async () => {
-      if (window.ethereum) {
-        try {
-          await ethereum.request({ method: 'eth_requestAccounts' });
-          provider = new ethers.providers.Web3Provider(window.ethereum);
-          signer = provider.getSigner();
-          contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-          const address = await signer.getAddress();
-          document.getElementById('wallet-status').innerText = `Connected: ${address}`;
-          document.getElementById('stake-section').classList.remove('hidden');
-          document.getElementById('rewards-summary').classList.remove('hidden');
-          document.getElementById('global-pool').classList.remove('hidden');
-
-          loadUserData();
-        } catch (err) {
-          console.error(err);
-          document.getElementById('status-message').innerText = "Connection failed.";
-        }
-      } else {
-        alert('Please install MetaMask!');
-      }
-    });
-
-    document.getElementById('stake-btn').addEventListener('click', async () => {
-      const amount = document.getElementById('stake-amount').value;
-      const duration = document.getElementById('stake-duration').value * 60;
-
-      try {
-        document.getElementById('status-message').innerText = "Sending transaction...";
-        const tx = await contract.stake(ethers.utils.parseUnits(amount, 18), duration);
-        await tx.wait();
-        document.getElementById('status-message').innerText = "Stake successful!";
-        loadUserData();
-      } catch (err) {
-        console.error(err);
-        document.getElementById('status-message').innerText = "Stake failed.";
-      }
-    });
-
-    document.getElementById('withdraw-btn').addEventListener('click', async () => {
-      try {
-        document.getElementById('status-message').innerText = "Sending withdraw transaction...";
-        const tx = await contract.withdraw();
-        await tx.wait();
-        document.getElementById('status-message').innerText = "Withdraw successful!";
-        loadUserData();
-      } catch (err) {
-        console.error(err);
-        document.getElementById('status-message').innerText = "Withdraw failed.";
-      }
-    });
-
-    async function loadUserData() {
-      if (!contract) return;
-      try {
-        const [active, dip, rise, pool] = await Promise.all([
-          contract.activeStake(await signer.getAddress()),
-          contract.lifetimeDipRewards(await signer.getAddress()),
-          contract.lifetimeRiseRewards(await signer.getAddress()),
-          contract.globalRewardPool()
-        ]);
-
-        if (active.amount.gt(0) && !active.withdrawn) {
-          document.getElementById('active-stake-section').classList.remove('hidden');
-          document.getElementById('active-details').innerText = `
-Amount: ${ethers.utils.formatUnits(active.amount, 18)} BOWWW
-Entry Price: ${active.entryPrice}
-Start Time: ${new Date(active.startTime * 1000).toLocaleString()}
-Duration: ${Math.floor(active.duration / 60)} minutes
-`;
-          const now = Math.floor(Date.now() / 1000);
-          document.getElementById('withdraw-btn').disabled = now < active.startTime + active.duration;
-        } else {
-          document.getElementById('active-stake-section').classList.add('hidden');
-        }
-
-        document.getElementById('dip-reward').innerText = `Dip Rewards Claimed: ${ethers.utils.formatUnits(dip, 18)} / 35,000 BOWWW`;
-        document.getElementById('rise-reward').innerText = `Rise Rewards Claimed: ${ethers.utils.formatUnits(rise, 18)} / 15,000 BOWWW`;
-        document.getElementById('pool-balance').innerText = `${ethers.utils.formatUnits(pool, 18)} BOWWW`;
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById('status-message').innerText = "Error loading data.";
-      }
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
+
