@@ -4,13 +4,65 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bake the Dip, Toast the Rise</title>
-  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff8e1;
+      color: #333;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: 1rem auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #5E068A;
+    }
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #6a0dad;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    button:disabled {
+      background-color: #ccc;
+    }
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    hr {
+      margin: 2rem 0;
+    }
+    .hidden {
+      display: none;
+    }
+    .status {
+      margin-top: 1rem;
+      text-align: center;
+      color: red;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h1>🍞 Bake the Dip, Toast the Rise</h1>
-    <p id="description">
+    <p>
       Stake $BOWWW. Earn rewards when price moves—up or down.
     </p>
 
@@ -21,7 +73,7 @@
 
     <div id="stake-section" class="hidden">
       <h2>Stake $BOWWW</h2>
-      <label>Amount of BOWWW to Stake</label>
+      <label>Amount to Stake</label>
       <input type="number" id="stake-amount" placeholder="Amount" />
       
       <label>Duration (in minutes, min 1 - max 4320)</label>
@@ -40,7 +92,7 @@
 
     <hr>
 
-    <div id="rewards-summary">
+    <div id="rewards-summary" class="hidden">
       <h2>Rewards Summary</h2>
       <p id="dip-reward">Dip Rewards Claimed: 0 / 35,000 BOWWW</p>
       <p id="rise-reward">Rise Rewards Claimed: 0 / 15,000 BOWWW</p>
@@ -48,7 +100,7 @@
 
     <hr>
 
-    <div id="global-pool">
+    <div id="global-pool" class="hidden">
       <h2>Global Reward Pool Remaining</h2>
       <p id="pool-balance">Loading...</p>
     </div>
@@ -56,6 +108,100 @@
     <p id="status-message" class="status"></p>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    let provider;
+    let signer;
+    let contract;
+
+    const CONTRACT_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
+    const CONTRACT_ABI = [/* YOUR_ABI_HERE */];
+
+    document.getElementById('connect-btn').addEventListener('click', async () => {
+      if (window.ethereum) {
+        try {
+          await ethereum.request({ method: 'eth_requestAccounts' });
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          signer = provider.getSigner();
+          contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+          const address = await signer.getAddress();
+          document.getElementById('wallet-status').innerText = `Connected: ${address}`;
+          document.getElementById('stake-section').classList.remove('hidden');
+          document.getElementById('rewards-summary').classList.remove('hidden');
+          document.getElementById('global-pool').classList.remove('hidden');
+
+          loadUserData();
+        } catch (err) {
+          console.error(err);
+          document.getElementById('status-message').innerText = "Connection failed.";
+        }
+      } else {
+        alert('Please install MetaMask!');
+      }
+    });
+
+    document.getElementById('stake-btn').addEventListener('click', async () => {
+      const amount = document.getElementById('stake-amount').value;
+      const duration = document.getElementById('stake-duration').value * 60;
+
+      try {
+        document.getElementById('status-message').innerText = "Sending transaction...";
+        const tx = await contract.stake(ethers.utils.parseUnits(amount, 18), duration);
+        await tx.wait();
+        document.getElementById('status-message').innerText = "Stake successful!";
+        loadUserData();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('status-message').innerText = "Stake failed.";
+      }
+    });
+
+    document.getElementById('withdraw-btn').addEventListener('click', async () => {
+      try {
+        document.getElementById('status-message').innerText = "Sending withdraw transaction...";
+        const tx = await contract.withdraw();
+        await tx.wait();
+        document.getElementById('status-message').innerText = "Withdraw successful!";
+        loadUserData();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('status-message').innerText = "Withdraw failed.";
+      }
+    });
+
+    async function loadUserData() {
+      if (!contract) return;
+      try {
+        const [active, dip, rise, pool] = await Promise.all([
+          contract.activeStake(await signer.getAddress()),
+          contract.lifetimeDipRewards(await signer.getAddress()),
+          contract.lifetimeRiseRewards(await signer.getAddress()),
+          contract.globalRewardPool()
+        ]);
+
+        if (active.amount.gt(0) && !active.withdrawn) {
+          document.getElementById('active-stake-section').classList.remove('hidden');
+          document.getElementById('active-details').innerText = `
+Amount: ${ethers.utils.formatUnits(active.amount, 18)} BOWWW
+Entry Price: ${active.entryPrice}
+Start Time: ${new Date(active.startTime * 1000).toLocaleString()}
+Duration: ${Math.floor(active.duration / 60)} minutes
+`;
+          const now = Math.floor(Date.now() / 1000);
+          document.getElementById('withdraw-btn').disabled = now < active.startTime + active.duration;
+        } else {
+          document.getElementById('active-stake-section').classList.add('hidden');
+        }
+
+        document.getElementById('dip-reward').innerText = `Dip Rewards Claimed: ${ethers.utils.formatUnits(dip, 18)} / 35,000 BOWWW`;
+        document.getElementById('rise-reward').innerText = `Rise Rewards Claimed: ${ethers.utils.formatUnits(rise, 18)} / 15,000 BOWWW`;
+        document.getElementById('pool-balance').innerText = `${ethers.utils.formatUnits(pool, 18)} BOWWW`;
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('status-message').innerText = "Error loading data.";
+      }
+    }
+  </script>
 </body>
 </html>
