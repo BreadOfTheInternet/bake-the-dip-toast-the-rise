@@ -1,2 +1,5 @@
 # bake-the-dip-toast-the-rise
-Decentralized staking contract rewarding users for $BOWWW price volatility. Earn rewards for both dips and pumps.
+
+Stake $BOWWW to earn rewards when the price moves—up or down.  
+Bake the dip. Toast the rise.  
+A limited-time on-chain insurance game rewarding volatility with $BOWWW.
